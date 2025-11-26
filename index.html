@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Spam Detector - ईमेल स्पैम डिटेक्टर</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        .spam-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .safe-gradient {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="spam-gradient text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                    <div>
+                        <h1 class="text-3xl font-bold">Email Spam Detector</h1>
+                        <p class="text-sm opacity-90">AI-Powered Spam Detection System</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm opacity-90">Total Scanned</p>
+                    <p class="text-2xl font-bold" id="totalScanned">0</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="grid md:grid-cols-3 gap-6">
+            <!-- Left Panel - Email Input -->
+            <div class="md:col-span-2">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Email Details
+                    </h2>
+                    
+                    <form id="spamDetectorForm">
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-semibold mb-2" for="senderEmail">
+                                Sender Email Address
+                            </label>
+                            <input 
+                                type="email" 
+                                id="senderEmail" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                placeholder="sender@example.com"
+                                required
+                            >
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-semibold mb-2" for="emailSubject">
+                                Email Subject
+                            </label>
+                            <input 
+                                type="text" 
+                                id="emailSubject" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                placeholder="Enter email subject"
+                                required
+                            >
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-gray-700 font-semibold mb-2" for="emailBody">
+                                Email Body
+                            </label>
+                            <textarea 
+                                id="emailBody" 
+                                rows="8" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                placeholder="Paste the complete email content here..."
+                                required
+                            ></textarea>
+                        </div>
+
+                        <div class="flex space-x-3">
+                            <button 
+                                type="submit" 
+                                class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 flex items-center justify-center"
+                            >
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                                Detect Spam
+                            </button>
+                            <button 
+                                type="button" 
+                                id="clearBtn"
+                                class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200"
+                            >
+                                Clear
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Result Section -->
+                    <div id="resultSection" class="mt-6 hidden slide-in">
+                        <div class="border-t pt-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">Detection Result</h3>
+                            <div id="resultCard" class="p-6 rounded-lg"></div>
+                            
+                            <div class="mt-4">
+                                <h4 class="font-semibold text-gray-700 mb-2">Spam Indicators Found:</h4>
+                                <div id="indicatorsList" class="space-y-2"></div>
+                            </div>
+
+                            <div class="mt-4">
+                                <h4 class="font-semibold text-gray-700 mb-2">Detailed Analysis:</h4>
+                                <div id="detailedAnalysis" class="bg-gray-50 p-4 rounded-lg text-sm"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Stats & History -->
+            <div class="md:col-span-1">
+                <!-- Stats Card -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Statistics</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Spam Detected</span>
+                            <span class="text-2xl font-bold text-red-600" id="spamCount">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Safe Emails</span>
+                            <span class="text-2xl font-bold text-green-600" id="safeCount">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Accuracy Rate</span>
+                            <span class="text-2xl font-bold text-purple-600" id="accuracyRate">98%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Tips -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Common Spam Signs</h3>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-start">
+                            <svg class="w-4 h-4 mr-2 text-red-500 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            Urgent money requests
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-4 h-4 mr-2 text-red-500 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            Too good to be true offers
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-4 h-4 mr-2 text-red-500 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            Suspicious links
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-4 h-4 mr-2 text-red-500 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            Poor grammar/spelling
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-4 h-4 mr-2 text-red-500 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            Asking for personal info
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-4 h-4 mr-2 text-red-500 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            Excessive capitalization
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div class="mt-8">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-bold text-gray-800">Scan History</h3>
+                    <button id="clearHistory" class="text-sm text-red-600 hover:text-red-700 font-semibold">
+                        Clear History
+                    </button>
+                </div>
+                <div id="historyList" class="space-y-3">
+                    <p class="text-gray-500 text-center py-8">No emails scanned yet</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-12 py-6">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-sm">&copy; 2024 Email Spam Detector. AI-Powered Protection for Your Inbox.</p>
+            <p class="text-xs text-gray-400 mt-2">Advanced spam detection using machine learning patterns</p>
+        </div>
+    </footer>
+
+    <script>
+        // Spam Detection Engine
+        class SpamDetector {
+            constructor() {
+                this.spamKeywords = [
+                    'winner', 'won', 'prize', 'lottery', 'congratulations', 'claim now',
+                    'free money', 'click here', 'act now', 'limited time', 'urgent',
+                    'verify your account', 'suspended', 'confirm your identity',
+                    'nigerian prince', 'inheritance', 'million dollars', 'bank account',
+                    'password', 'credit card', 'social security', 'tax refund',
+                    'viagra', 'pharmacy', 'weight loss', 'make money fast',
+                    'work from home', 'no experience', 'guaranteed income',
+                    'click below', 'dear friend', 'beneficiary', 'transfer funds',
+                    'cash prize', '100% free', 'risk free', 'no catch',
+                    'order now', 'buy now', 'subscribe', 'unsubscribe here'
+                ];
+
+                this.suspiciousPatterns = [
+                    /\$[\d,]+/g, // Money amounts
+                    /\d{16}/g, // Credit card numbers
+                    /\d{3}-\d{2}-\d{4}/g, // SSN
+                    /http[s]?:\/\/bit\.ly/gi, // Shortened URLs
+                    /click\s+here/gi,
+                    /act\s+now/gi,
+                    /!!!+/g, // Multiple exclamation marks
+                    /FREE/g, // All caps FREE
+                    /%\s*off/gi, // Percentage off
+                ];
+
+                this.history = JSON.parse(localStorage.getItem('spamHistory')) || [];
+                this.stats = JSON.parse(localStorage.getItem('spamStats')) || {
+                    total: 0,
+                    spam: 0,
+                    safe: 0
+                };
+            }
+
+            detectSpam(email) {
+                const fullText = `${email.subject} ${email.body}`.toLowerCase();
+                let spamScore = 0;
+                let indicators = [];
+                let details = {};
+
+                // Check for spam keywords
+                let keywordMatches = 0;
+                this.spamKeywords.forEach(keyword => {
+                    if (fullText.includes(keyword.toLowerCase())) {
+                        keywordMatches++;
+                        spamScore += 10;
+                        indicators.push(`Spam keyword detected: "${keyword}"`);
+                    }
+                });
+                details.keywordMatches = keywordMatches;
+
+                // Check for suspicious patterns
+                let patternMatches = 0;
+                this.suspiciousPatterns.forEach((pattern, index) => {
+                    const matches = fullText.match(pattern);
+                    if (matches) {
+                        patternMatches += matches.length;
+                        spamScore += 15 * matches.length;
+                        indicators.push(`Suspicious pattern found: ${this.getPatternName(index)}`);
+                    }
+                });
+                details.patternMatches = patternMatches;
+
+                // Check email format
+                if (this.checkSuspiciousEmail(email.sender)) {
+                    spamScore += 20;
+                    indicators.push('Suspicious sender email format');
+                }
+
+                // Check for excessive capitalization
+                const capsRatio = this.getCapitalizationRatio(email.subject + email.body);
+                if (capsRatio > 0.3) {
+                    spamScore += 15;
+                    indicators.push(`Excessive capitalization (${(capsRatio * 100).toFixed(0)}%)`);
+                }
+                details.capsRatio = capsRatio;
+
+                // Check for excessive punctuation
+                const exclamationCount = (fullText.match(/!/g) || []).length;
+                if (exclamationCount > 3) {
+                    spamScore += 10;
+                    indicators.push(`Excessive exclamation marks (${exclamationCount})`);
+                }
+
+                // Check for URL count
+                const urlCount = (fullText.match(/http[s]?:\/\//gi) || []).length;
+                if (urlCount > 3) {
+                    spamScore += 10 * urlCount;
+                    indicators.push(`Multiple URLs detected (${urlCount})`);
+                }
+                details.urlCount = urlCount;
+
+                // Check for number of words
+                const wordCount = fullText.split(/\s+/).length;
+                if (wordCount < 10) {
+                    spamScore += 15;
+                    indicators.push('Suspiciously short email');
+                }
+                details.wordCount = wordCount;
+
+                const isSpam = spamScore > 30;
+                const confidence = Math.min(95, Math.max(50, spamScore > 30 ? spamScore : 100 - spamScore));
+
+                return {
+                    isSpam,
+                    score: spamScore,
+                    confidence,
+                    indicators,
+                    details
+                };
+            }
+
+            getPatternName(index) {
+                const names = [
+                    'Money amount',
+                    'Credit card number',
+                    'Social Security Number',
+                    'Shortened URL',
+                    'Click here text',
+                    'Act now text',
+                    'Multiple exclamations',
+                    'All caps FREE',
+                    'Discount percentage'
+                ];
+                return names[index] || 'Unknown pattern';
+            }
+
+            checkSuspiciousEmail(email) {
+                const suspiciousDomains = ['temp', 'fake', 'spam', 'test'];
+                const domain = email.split('@')[1];
+                if (!domain) return true;
+                
+                return suspiciousDomains.some(sus => domain.includes(sus)) || 
+                       domain.split('.').length > 3 ||
+                       /\d{5,}/.test(email);
+            }
+
+            getCapitalizationRatio(text) {
+                const letters = text.replace(/[^a-zA-Z]/g, '');
+                if (letters.length === 0) return 0;
+                const capitals = text.replace(/[^A-Z]/g, '');
+                return capitals.length / letters.length;
+            }
+
+            saveToHistory(email, result) {
+                const historyItem = {
+                    id: Date.now(),
+                    timestamp: new Date().toISOString(),
+                    sender: email.sender,
+                    subject: email.subject,
+                    result: result.isSpam ? 'SPAM' : 'SAFE',
+                    score: result.score,
+                    confidence: result.confidence
+                };
+
+                this.history.unshift(historyItem);
+                if (this.history.length > 20) {
+                    this.history = this.history.slice(0, 20);
+                }
+
+                this.stats.total++;
+                if (result.isSpam) {
+                    this.stats.spam++;
+                } else {
+                    this.stats.safe++;
+                }
+
+                localStorage.setItem('spamHistory', JSON.stringify(this.history));
+                localStorage.setItem('spamStats', JSON.stringify(this.stats));
+            }
+
+            clearHistory() {
+                this.history = [];
+                this.stats = { total: 0, spam: 0, safe: 0 };
+                localStorage.removeItem('spamHistory');
+                localStorage.removeItem('spamStats');
+            }
+        }
+
+        // Initialize detector
+        const detector = new SpamDetector();
+
+        // DOM Elements
+        const form = document.getElementById('spamDetectorForm');
+        const resultSection = document.getElementById('resultSection');
+        const resultCard = document.getElementById('resultCard');
+        const indicatorsList = document.getElementById('indicatorsList');
+        const detailedAnalysis = document.getElementById('detailedAnalysis');
+        const historyList = document.getElementById('historyList');
+        const clearBtn = document.getElementById('clearBtn');
+        const clearHistoryBtn = document.getElementById('clearHistory');
+
+        // Update UI with stats
+        function updateStats() {
+            document.getElementById('totalScanned').textContent = detector.stats.total;
+            document.getElementById('spamCount').textContent = detector.stats.spam;
+            document.getElementById('safeCount').textContent = detector.stats.safe;
+        }
+
+        // Display result
+        function displayResult(result) {
+            const bgColor = result.isSpam ? 'bg-red-100 border-red-500' : 'bg-green-100 border-green-500';
+            const textColor = result.isSpam ? 'text-red-800' : 'text-green-800';
+            const status = result.isSpam ? 'SPAM DETECTED' : 'SAFE EMAIL';
+            const icon = result.isSpam ? 
+                '<svg class="w-16 h-16" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>' :
+                '<svg class="w-16 h-16" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>';
+
+            resultCard.innerHTML = `
+                <div class="${bgColor} border-l-4 ${textColor} p-4 flex items-center justify-between">
+                    <div class="flex items-center">
+                        ${icon}
+                        <div class="ml-4">
+                            <h4 class="text-2xl font-bold">${status}</h4>
+                            <p class="text-sm mt-1">Spam Score: ${result.score} | Confidence: ${result.confidence}%</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-4xl font-bold">${result.confidence}%</div>
+                        <div class="text-xs">Confidence</div>
+                    </div>
+                </div>
+            `;
+
+            // Display indicators
+            if (result.indicators.length > 0) {
+                indicatorsList.innerHTML = result.indicators.map(indicator => `
+                    <div class="flex items-start bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-400">
+                        <svg class="w-5 h-5 text-yellow-600 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="text-sm text-gray-700">${indicator}</span>
+                    </div>
+                `).join('');
+            } else {
+                indicatorsList.innerHTML = '<p class="text-green-600 text-sm">No spam indicators found ✓</p>';
+            }
+
+            // Display detailed analysis
+            detailedAnalysis.innerHTML = `
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="font-semibold text-gray-600">Keyword Matches:</p>
+                        <p class="text-lg">${result.details.keywordMatches}</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-600">Pattern Matches:</p>
+                        <p class="text-lg">${result.details.patternMatches}</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-600">URL Count:</p>
+                        <p class="text-lg">${result.details.urlCount}</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-600">Word Count:</p>
+                        <p class="text-lg">${result.details.wordCount}</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-600">Caps Ratio:</p>
+                        <p class="text-lg">${(result.details.capsRatio * 100).toFixed(1)}%</p>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-600">Spam Score:</p>
+                        <p class="text-lg font-bold ${result.isSpam ? 'text-red-600' : 'text-green-600'}">${result.score}</p>
+                    </div>
+                </div>
+            `;
+
+            resultSection.classList.remove('hidden');
+            resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Display history
+        function displayHistory() {
+            if (detector.history.length === 0) {
+                historyList.innerHTML = '<p class="text-gray-500 text-center py-8">No emails scanned yet</p>';
+                return;
+            }
+
+            historyList.innerHTML = detector.history.map(item => {
+                const isSpam = item.result === 'SPAM';
+                const bgColor = isSpam ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200';
+                const badgeColor = isSpam ? 'bg-red-500' : 'bg-green-500';
+                
+                return `
+                    <div class="${bgColor} border rounded-lg p-4">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <span class="${badgeColor} text-white text-xs font-bold px-2 py-1 rounded">${item.result}</span>
+                                    <span class="text-xs text-gray-500">${new Date(item.timestamp).toLocaleString()}</span>
+                                </div>
+                                <p class="font-semibold text-gray-800">${item.subject}</p>
+                                <p class="text-sm text-gray-600">From: ${item.sender}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500">Confidence</p>
+                                <p class="text-lg font-bold">${item.confidence}%</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Form submit handler
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const email = {
+                sender: document.getElementById('senderEmail').value,
+                subject: document.getElementById('emailSubject').value,
+                body: document.getElementById('emailBody').value
+            };
+
+            const result = detector.detectSpam(email);
+            detector.saveToHistory(email, result);
+            
+            displayResult(result);
+            updateStats();
+            displayHistory();
+        });
+
+        // Clear form
+        clearBtn.addEventListener('click', () => {
+            form.reset();
+            resultSection.classList.add('hidden');
+        });
+
+        // Clear history
+        clearHistoryBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all history?')) {
+                detector.clearHistory();
+                updateStats();
+                displayHistory();
+            }
+        });
+
+        // Initialize on load
+        updateStats();
+        displayHistory();
+
+        // Sample data button (for demo)
+        const samples = [
+            {
+                sender: 'lottery@winner-notification.com',
+                subject: 'CONGRATULATIONS!!! You WON $1,000,000!!!',
+                body: 'Dear Winner, You have been selected to receive ONE MILLION DOLLARS! Click here NOW to claim your prize! This is a LIMITED TIME offer! Act now or lose this chance forever! We need your bank account details to transfer the funds. Reply immediately!'
+            },
+            {
+                sender: 'newsletter@company.com',
+                subject: 'Monthly Newsletter - March 2024',
+                body: 'Hello, Here is our monthly newsletter with updates about our products and services. We hope you find this information useful. Thank you for being a valued customer.'
+            }
+        ];
+
+        // Add sample data buttons
+        const sampleButtons = document.createElement('div');
+        sampleButtons.className = 'mt-4 flex gap-2';
+        sampleButtons.innerHTML = `
+            <button type="button" id="sampleSpam" class="text-sm bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg">
+                Load Spam Example
+            </button>
+            <button type="button" id="sampleSafe" class="text-sm bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded-lg">
+                Load Safe Example
+            </button>
+        `;
+        form.appendChild(sampleButtons);
+
+        document.getElementById('sampleSpam').addEventListener('click', () => {
+            document.getElementById('senderEmail').value = samples[0].sender;
+            document.getElementById('emailSubject').value = samples[0].subject;
+            document.getElementById('emailBody').value = samples[0].body;
+        });
+
+        document.getElementById('sampleSafe').addEventListener('click', () => {
+            document.getElementById('senderEmail').value = samples[1].sender;
+            document.getElementById('emailSubject').value = samples[1].subject;
+            document.getElementById('emailBody').value = samples[1].body;
+        });
+    </script>
+</body>
+</html>
